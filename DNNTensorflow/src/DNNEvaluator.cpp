@@ -77,7 +77,7 @@ float NNEvaluation::DNNEvaluator::analyze(float* data)
     // define the output and run
     std::cout << "session.run" << std::endl;
     std::vector<tensorflow::Tensor> outputs;
-    tensorflow::run(session_, { { "input_tensor_name_", input } }, { "output_tensor_name_" }, &outputs);
+    tensorflow::run(session_, { { input_tensor_name_, input } }, { output_tensor_name_ }, &outputs);
 
     float result = outputs[0].matrix<float>()(0, 0);
     // check and print the output

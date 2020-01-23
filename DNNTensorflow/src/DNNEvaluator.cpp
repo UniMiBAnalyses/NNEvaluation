@@ -4,18 +4,18 @@
 #include <iostream>
 #include <fstream>
 
-NNEvaluation::DNNEvaluator::DNNEvaluator(const std::string graphPath, 
-                                        const std::string configsPath)
-    : graphPath_(graphPath)
-    , configsPath_(configsPath)
+NNEvaluation::DNNEvaluator::DNNEvaluator(const std::string modelPath)
+    : modelPath_(modelPath)
     , graphDef_(nullptr)
     , session_(nullptr)
 {
     // show tf debug logs
     tensorflow::setLogging("0");
-
-    std::ifstream inputfile_scaler{configsPath_};
-    std::cout << "Reading file: "<< configsPath_ << std::endl;
+    
+    // Parse scaler configuration
+    std::string scalerPath = modelPath_ + "scaler.txt";
+    std::ifstream inputfile_scaler{scalerPath};
+    std::cout << "Reading file: "<< scalerPath << std::endl;
     if(inputfile_scaler.fail())  
     { 
         std::cout << "error" << std::endl;
@@ -26,17 +26,36 @@ NNEvaluation::DNNEvaluator::DNNEvaluator(const std::string graphPath,
         // Now read mean, scale factors for each variable
         float m_,s_;
         while (! inputfile_scaler.eof()){
-        inputfile_scaler >> m_ >> s_; 
-        scaler_factors_.push_back({m_, s_});
+            inputfile_scaler >> m_ >> s_; 
+            scaler_factors_.push_back({m_, s_});
         }  
     }   
     inputfile_scaler.close();
 
     // Save number of variables
     n_inputs_ = scaler_factors_.size();
-    
-    // Initialise the sessions
-    initialise();
+
+    // Parse TF metadata
+    std::string tfmetadataPath = modelPath_ + "tf_metadata.txt";
+    std::ifstream inputfile_tfmetadata{tfmetadataPath};
+    std::cout << "Reading file: "<< tfmetadataPath << std::endl;
+    if(inputfile_tfmetadata.fail())  
+    { 
+        std::cout << "error" << std::endl;
+        exit(1);
+    }else{ 
+        // The first line contains the inputand output tensornames
+        inputfile_tfmetadata >> input_tensor_name_ >> output_tensor_name_;
+    }   
+    inputfile_tfmetadata.close();
+
+    // Initialise the sessions: import TF graph
+    // initialise(); // refactored!
+    // load the graph
+    std::string graphPath = modelPath_ + "model.txt";
+    graphDef_ = tensorflow::loadGraphDef(graphPath); // TODO check what happens if file not present
+    // create a new session and add the graphDef
+    session_ = tensorflow::createSession(graphDef_);
 }
 
 NNEvaluation::DNNEvaluator::~DNNEvaluator()
@@ -48,16 +67,6 @@ NNEvaluation::DNNEvaluator::~DNNEvaluator()
     // delete the graph
     delete graphDef_;
     graphDef_ = nullptr;
-}
-
-void NNEvaluation::DNNEvaluator::initialise()
-{
-    // load the graph
-    std::cout << "loading graph from " << graphPath_ << std::endl;
-    graphDef_ = tensorflow::loadGraphDef(graphPath_);
-
-    // create a new session and add the graphDef
-    session_ = tensorflow::createSession(graphDef_);
 }
 
 float NNEvaluation::DNNEvaluator::scale_variable(int var_index, float & var){
@@ -84,3 +93,12 @@ float NNEvaluation::DNNEvaluator::analyze(float* data)
     return result;
 }
 
+// void NNEvaluation::DNNEvaluator::initialise()
+// {
+//     // load the graph
+//     std::cout << "loading graph from " << graphPath_ << std::endl;
+//     graphDef_ = tensorflow::loadGraphDef(graphPath_);
+
+//     // create a new session and add the graphDef
+//     session_ = tensorflow::createSession(graphDef_);
+// }

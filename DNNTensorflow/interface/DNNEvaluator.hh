@@ -10,7 +10,7 @@ public:
     ~DNNEvaluator();
 
     void initialise();
-    float analyze(float* data);
+    float analyze(std::vector<float> data);
 private:
     
     float scale_variable(int var_index, float & var);

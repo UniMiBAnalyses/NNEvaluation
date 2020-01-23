@@ -25,8 +25,9 @@ NNEvaluation::DNNEvaluator::DNNEvaluator(const std::string modelPath)
         inputfile_scaler >> input_tensor_name_ >> output_tensor_name_;
         // Now read mean, scale factors for each variable
         float m_,s_;
+        std::string varname{};
         while (! inputfile_scaler.eof()){
-            inputfile_scaler >> m_ >> s_; 
+            inputfile_scaler >> varname >> m_ >> s_; 
             scaler_factors_.push_back({m_, s_});
         }  
     }   
@@ -74,7 +75,7 @@ float NNEvaluation::DNNEvaluator::scale_variable(int var_index, float & var){
     return (var - mean) / scale;
 }
 
-float NNEvaluation::DNNEvaluator::analyze(float* data)
+float NNEvaluation::DNNEvaluator::analyze(std::vector<float> data)
 {
     tensorflow::Tensor input(tensorflow::DT_FLOAT, { 1, n_inputs_ });
     float* d = input.flat<float>().data();

@@ -1,5 +1,4 @@
 <use name="PhysicsTools/TensorFlow" />
-<use name="root"/>
 <export>
     <use name="PhysicsTools/Tensorflow" />
     <lib name="DNNEvaluator" />

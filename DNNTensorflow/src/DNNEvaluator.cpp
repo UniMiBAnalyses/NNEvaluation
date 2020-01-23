@@ -21,20 +21,19 @@ NNEvaluation::DNNEvaluator::DNNEvaluator(const std::string modelPath)
         std::cout << "error" << std::endl;
         exit(1);
     }else{ 
-        // The first line contains the inputand output tensornames
-        inputfile_scaler >> input_tensor_name_ >> output_tensor_name_;
         // Now read mean, scale factors for each variable
         float m_,s_;
         std::string varname{};
-        while (! inputfile_scaler.eof()){
-            inputfile_scaler >> varname >> m_ >> s_; 
+        while (inputfile_scaler >> varname >> m_ >> s_){
             scaler_factors_.push_back({m_, s_});
+            std::cout << "variable: "<< varname << " " << m_ << " " << s_ << std::endl; 
         }  
     }   
     inputfile_scaler.close();
 
     // Save number of variables
     n_inputs_ = scaler_factors_.size();
+    std::cout << "Working with " << n_inputs_ << " variables" << std::endl;
 
     // Parse TF metadata
     std::string tfmetadataPath = modelPath_ + "tf_metadata.txt";
@@ -53,10 +52,11 @@ NNEvaluation::DNNEvaluator::DNNEvaluator(const std::string modelPath)
     // Initialise the sessions: import TF graph
     // initialise(); // refactored!
     // load the graph
-    std::string graphPath = modelPath_ + "model.txt";
+    std::string graphPath = modelPath_ + "model.pb";
     graphDef_ = tensorflow::loadGraphDef(graphPath); // TODO check what happens if file not present
     // create a new session and add the graphDef
     session_ = tensorflow::createSession(graphDef_);
+    std::cout << "Tensorflow session ready" <<std::endl;
 }
 
 NNEvaluation::DNNEvaluator::~DNNEvaluator()
@@ -82,24 +82,15 @@ float NNEvaluation::DNNEvaluator::analyze(std::vector<float> data)
     for (uint i = 0; i < n_inputs_; i++, d++)
     {
         *d = scale_variable(i, data[i]);
+        //std::cout << data[i] << "(" << *d << ") | ";
     }
 
     // define the output and run
-    std::cout << "session.run" << std::endl;
     std::vector<tensorflow::Tensor> outputs;
     tensorflow::run(session_, { { input_tensor_name_, input } }, { output_tensor_name_ }, &outputs);
 
     float result = outputs[0].matrix<float>()(0, 0);
-    // check and print the output
+    //std::cout << "----> " << result << std::endl;
     return result;
 }
 
-// void NNEvaluation::DNNEvaluator::initialise()
-// {
-//     // load the graph
-//     std::cout << "loading graph from " << graphPath_ << std::endl;
-//     graphDef_ = tensorflow::loadGraphDef(graphPath_);
-
-//     // create a new session and add the graphDef
-//     session_ = tensorflow::createSession(graphDef_);
-// }

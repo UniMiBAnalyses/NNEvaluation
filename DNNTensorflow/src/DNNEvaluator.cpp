@@ -4,10 +4,11 @@
 #include <iostream>
 #include <fstream>
 
-NNEvaluation::DNNEvaluator::DNNEvaluator(const std::string modelPath)
+NNEvaluation::DNNEvaluator::DNNEvaluator(const std::string modelPath, bool verbose)
     : modelPath_(modelPath)
     , graphDef_(nullptr)
     , session_(nullptr)
+    , verbose_(verbose)
 {
     // show tf debug logs
     tensorflow::setLogging("0");
@@ -82,7 +83,7 @@ float NNEvaluation::DNNEvaluator::analyze(std::vector<float> data)
     for (uint i = 0; i < n_inputs_; i++, d++)
     {
         *d = scale_variable(i, data[i]);
-        //std::cout << data[i] << "(" << *d << ") | ";
+        if(verbose_) std::cout << data[i] << "(" << *d << ") | ";
     }
 
     // define the output and run
@@ -90,7 +91,7 @@ float NNEvaluation::DNNEvaluator::analyze(std::vector<float> data)
     tensorflow::run(session_, { { input_tensor_name_, input } }, { output_tensor_name_ }, &outputs);
 
     float result = outputs[0].matrix<float>()(0, 0);
-    //std::cout << "----> " << result << std::endl;
+    if (verbose_)  std::cout << "----> " << result << std::endl;
     return result;
 }
 

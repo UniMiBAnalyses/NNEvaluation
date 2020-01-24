@@ -6,7 +6,7 @@ namespace NNEvaluation{
 
 class DNNEvaluator {
 public:
-    explicit DNNEvaluator(const std::string modelPath);
+    explicit DNNEvaluator(const std::string modelPath, bool verbose=false);
     ~DNNEvaluator();
 
     void initialise();
@@ -21,6 +21,7 @@ private:
     std::string output_tensor_name_;
     tensorflow::GraphDef* graphDef_;
     tensorflow::Session* session_;
+    bool verbose_;
     // Extracted from file: ?? and the rest? is it not extracetd from file? FIXME
     std::vector<std::pair<float,float>> scaler_factors_;
 };

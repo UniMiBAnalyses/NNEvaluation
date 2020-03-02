@@ -13,6 +13,7 @@ NNEvaluation::DNNEvaluator::DNNEvaluator(const std::string modelPath, bool verbo
     // show tf debug logs
     tensorflow::setLogging("0");
     
+    std::cout << "Model path: "<<modelPath_ << std::endl;
     // Parse scaler configuration
     std::string scalerPath = modelPath_ + "scaler.txt";
     std::ifstream inputfile_scaler{scalerPath};
@@ -53,11 +54,8 @@ NNEvaluation::DNNEvaluator::DNNEvaluator(const std::string modelPath, bool verbo
     // Initialise the sessions: import TF graph
     // initialise(); // refactored!
     // load the graph
-    std::string graphPath = modelPath_ + "model.pb";
-    graphDef_ = tensorflow::loadGraphDef(graphPath); // TODO check what happens if file not present
-    // create a new session and add the graphDef
-    session_ = tensorflow::createSession(graphDef_);
-    std::cout << "Tensorflow session ready" <<std::endl;
+    graphPath_ = modelPath_ + "model.pb";
+
 }
 
 NNEvaluation::DNNEvaluator::~DNNEvaluator()
@@ -71,6 +69,16 @@ NNEvaluation::DNNEvaluator::~DNNEvaluator()
     graphDef_ = nullptr;
 }
 
+void NNEvaluation::DNNEvaluator::open_session(){
+    if (session_ready_) return;
+
+    graphDef_ = tensorflow::loadGraphDef(graphPath_); // TODO check what happens if file not present
+    // create a new session and add the graphDef
+    session_ = tensorflow::createSession(graphDef_);
+    session_ready_ = true;
+    std::cout << "Tensorflow session ready" <<std::endl;
+}
+
 float NNEvaluation::DNNEvaluator::scale_variable(int var_index, float & var){
     auto [mean,scale] = scaler_factors_.at(var_index);
     return (var - mean) / scale;
@@ -78,6 +86,9 @@ float NNEvaluation::DNNEvaluator::scale_variable(int var_index, float & var){
 
 float NNEvaluation::DNNEvaluator::analyze(std::vector<float> data)
 {
+    // Check if tensorflow session is open, if not open it
+    open_session();
+
     tensorflow::Tensor input(tensorflow::DT_FLOAT, { 1, n_inputs_ });
     float* d = input.flat<float>().data();
     for (uint i = 0; i < n_inputs_; i++, d++)

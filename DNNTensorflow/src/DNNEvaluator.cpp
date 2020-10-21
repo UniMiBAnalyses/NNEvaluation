@@ -84,7 +84,7 @@ float NNEvaluation::DNNEvaluator::scale_variable(int var_index, float & var){
     return (var - mean) / scale;
 }
 
-float NNEvaluation::DNNEvaluator::analyze(std::vector<float> data)
+std::vector<float> NNEvaluation::DNNEvaluator::analyze(std::vector<float> data)
 {
     // Check if tensorflow session is open, if not open it
     open_session();
@@ -101,8 +101,24 @@ float NNEvaluation::DNNEvaluator::analyze(std::vector<float> data)
     std::vector<tensorflow::Tensor> outputs;
     tensorflow::run(session_, { { input_tensor_name_, input } }, { output_tensor_name_ }, &outputs);
 
-    float result = outputs[0].matrix<float>()(0, 0);
-    if (verbose_)  std::cout << "----> " << result << std::endl;
-    return result;
+    std::vector<float> vecresult;
+   
+    if ( outputs[0].shape().dims() != 2) {
+      std::cout << "Tensor has NOT dimension 2. Not yet implemented!" << std::endl;
+      exit(1);
+    }
+    // case of vector-like tensors, e.g. shape: [1,X]
+    if ( outputs[0].shape().dim_size(0) == 1 ) { 
+      for (int i=0; i<outputs[0].shape().dim_size(1); ++i){
+        vecresult.push_back(outputs[0].matrix<float>()(0, i));
+      }
+    }
+    // matrix-like tensors -> not yet implemented
+    else {
+      std::cout << "Matrix-like tensors have not been implemented yet!" << std::endl;
+      exit(1);
+    }
+
+    return vecresult;
 }
 

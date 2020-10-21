@@ -9,7 +9,7 @@ public:
     explicit DNNEvaluator(const std::string modelPath, bool verbose=false);
     ~DNNEvaluator();
 
-    float analyze(std::vector<float> data);
+    std::vector<float> analyze(std::vector<float> data);
 private:
     
     float scale_variable(int var_index, float & var);

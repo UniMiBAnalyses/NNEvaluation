@@ -11,7 +11,7 @@ NNEvaluation::DNNEvaluator::DNNEvaluator(const std::string modelPath, bool verbo
     , verbose_(verbose)
 {
     // show tf debug logs
-    tensorflow::setLogging("0");
+    tensorflow::setLogging("1");
     
     std::cout << "Model path: "<<modelPath_ << std::endl;
     // Parse scaler configuration
@@ -70,6 +70,7 @@ NNEvaluation::DNNEvaluator::~DNNEvaluator()
 }
 
 void NNEvaluation::DNNEvaluator::open_session(){
+    if (verbose_) std::cout << "Opening Tensorflow session" << std::endl;
     if (session_ready_) return;
 
     graphDef_ = tensorflow::loadGraphDef(graphPath_); // TODO check what happens if file not present

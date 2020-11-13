@@ -1,4 +1,5 @@
 #include "NNEvaluation/DNNTensorflow/interface/DNNEvaluator.hh"
+#include "NNEvaluation/DNNTensorflow/interface/DNNEvaluatorSavedModel.hh"
 
 #ifdef __CLING__
 #pragma link off all globals;
@@ -9,4 +10,5 @@
 
 #pragma link C++ namespace NNEvaluation;
 #pragma link C++ class NNEvaluation::DNNEvaluator-;
+#pragma link C++ class NNEvaluation::DNNEvaluatorSavedModel-;
 #endif

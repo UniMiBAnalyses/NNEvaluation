@@ -10,6 +10,7 @@ public:
     ~DNNEvaluatorSavedModel();
 
     std::vector<float> analyze(std::vector<float> data);
+    std::vector<std::vector<float>> analyze_batch(std::vector<std::vector<float>> data);
 private:
     
     float scale_variable(int var_index, float & var);

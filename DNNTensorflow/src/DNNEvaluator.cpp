@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <vector>
 
 NNEvaluation::DNNEvaluator::DNNEvaluator(const std::string modelPath, bool verbose)
     : modelPath_(modelPath)
@@ -121,5 +122,53 @@ std::vector<float> NNEvaluation::DNNEvaluator::analyze(std::vector<float> data)
     }
 
     return vecresult;
+}
+
+std::vector<std::vector<float>> NNEvaluation::DNNEvaluator::analyze_batch(std::vector<std::vector<float>> data)
+{
+    // Check if tensorflow session is open, if not open it
+    open_session();
+    uint batch_size = data.size();
+
+    tensorflow::Tensor input(tensorflow::DT_FLOAT, { batch_size, n_inputs_ });
+    auto input_tensor_mapped = input.tensor<float, 2>();
+    //float* d = input.flat<float>().data();
+
+    for (uint b = 0; b< batch_size; b++){
+        for (uint i = 0; i < n_inputs_; i++)
+        {   
+            input_tensor_mapped(b,i) = scale_variable(i, data[b][i]);
+
+            if(verbose_) std::cout << data[b][i] << "(" <<  input_tensor_mapped(b,i) << ") | ";
+        }
+    }    
+
+    // define the output and run
+    std::vector<tensorflow::Tensor> outputs;
+    tensorflow::run(session_, { { input_tensor_name_, input } }, { output_tensor_name_ }, &outputs);
+
+    std::vector<std::vector<float>> batch_result;
+   
+    if ( outputs[0].shape().dims() != 2) {
+      std::cout << "Tensor has NOT dimension 2. Not yet implemented!" << std::endl;
+      exit(1);
+    }
+    // case of vector-like tensors, e.g. shape: [b,X]
+    if ( outputs[0].shape().dim_size(0) == 1 ) { 
+        for (uint b =0; b< batch_size; b++){
+            std::vector<float> vecresult;
+            for (int i=0; i<outputs[b].shape().dim_size(1); ++i){
+                vecresult.push_back(outputs[b].matrix<float>()(0, i));
+            }
+            batch_result.push_back(vecresult);
+        }
+    }
+    // matrix-like tensors 
+    else {
+      std::cout << "Matrix-like tensors have not been implemented yet!" << std::endl;
+      exit(1);
+    }
+
+    return batch_result;
 }
 

@@ -1,6 +1,7 @@
 #ifndef DNNEvaluator_
 #define DNNEvaluator_
 
+
 #include "PhysicsTools/TensorFlow/interface/TensorFlow.h"
 namespace NNEvaluation{
 
@@ -10,6 +11,7 @@ public:
     ~DNNEvaluator();
 
     std::vector<float> analyze(std::vector<float> data);
+    std::vector<std::vector<float>> analyze_batch(std::vector<std::vector<float>> data);
 private:
     
     float scale_variable(int var_index, float & var);

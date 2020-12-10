@@ -140,42 +140,41 @@ std::vector<std::vector<float>> NNEvaluation::DNNEvaluatorSavedModel::analyze_ba
     tensorflow::Tensor input(tensorflow::DT_FLOAT, { batch_size, n_inputs_ });
     auto input_tensor_mapped = input.tensor<float, 2>();
     //float* d = input.flat<float>().data();
-
+    if (verbose_) std:: cout << "-----------------" << std::endl;
     for (uint b = 0; b< batch_size; b++){
         for (uint i = 0; i < n_inputs_; i++)
         {   
             input_tensor_mapped(b,i) = scale_variable(i, data[b][i]);
+            if(verbose_) std::cout <<  "["<< b <<","<<i<<"] " << data[b][i] << "->" <<  input_tensor_mapped(b,i) << ") | ";
 
-            if(verbose_) std::cout << data[b][i] << "(" <<  input_tensor_mapped(b,i) << ") | ";
         }
+        if (verbose_) std::cout << std::endl;
     }    
 
     // define the output and run
     std::vector<tensorflow::Tensor> outputs;
     tensorflow::run(session_, { { input_tensor_name_, input } }, { output_tensor_name_ }, &outputs);
 
-    std::vector<std::vector<float>> batch_result;
-   
+    if(verbose_) std::cout << "Reading output. N. outputs:" << outputs.size() << " " << outputs[0].shape()  << std::endl;
+
+    std::vector<std::vector<float>> batch_results;
+    
     if ( outputs[0].shape().dims() != 2) {
       std::cout << "Tensor has NOT dimension 2. Not yet implemented!" << std::endl;
       exit(1);
     }
-    // case of vector-like tensors, e.g. shape: [b,X]
-    if ( outputs[0].shape().dim_size(0) == 1 ) { 
+     
+    else if ( outputs[0].shape().dims() == 2) {
+        // case of [batch, Y] tensors
         for (uint b =0; b< batch_size; b++){
+            auto r = outputs[0].tensor<float,2>();
             std::vector<float> vecresult;
-            for (int i=0; i<outputs[b].shape().dim_size(1); ++i){
-                vecresult.push_back(outputs[b].matrix<float>()(0, i));
+            for (int i=0; i<outputs[0].shape().dim_size(1); ++i){
+                vecresult.push_back(r(b, i));
             }
-            batch_result.push_back(vecresult);
+            batch_results.push_back(vecresult);
         }
-    }
-    // matrix-like tensors 
-    else {
-      std::cout << "Matrix-like tensors have not been implemented yet!" << std::endl;
-      exit(1);
-    }
-
-    return batch_result;
+    } 
+    return batch_results;
 }
 

@@ -166,8 +166,8 @@ std::vector<std::vector<float>> NNEvaluation::DNNEvaluatorSavedModel::analyze_ba
      
     else if ( outputs[0].shape().dims() == 2) {
         // case of [batch, Y] tensors
+        auto r = outputs[0].tensor<float,2>();
         for (uint b =0; b< batch_size; b++){
-            auto r = outputs[0].tensor<float,2>();
             std::vector<float> vecresult;
             for (int i=0; i<outputs[0].shape().dim_size(1); ++i){
                 vecresult.push_back(r(b, i));
